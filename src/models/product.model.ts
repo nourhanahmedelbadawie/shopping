@@ -1,8 +1,5 @@
 import User from '../types/user.types'
-import bcrypt from 'bcrypt'
 import db from '../database'
-import * as dotenv from 'dotenv'
-dotenv.config()
 
 class UserModel {
   // create
@@ -16,7 +13,7 @@ class UserModel {
         user.user_name,
         user.first_name,
         user.last_name,
-        hash_password(user.password)
+        user.password
       ])
       connection.release()
 
@@ -32,15 +29,10 @@ class UserModel {
   async loginUser(email: string, password: string): Promise<User | undefined> {
     try {
       const connection = await db.connect()
-      const sql = `SELECT password FROM users WHERE email=$1`
-      const result = await connection.query(sql, [email])
+      const result = await connection.query(`SELECT password FROM users WHERE email=$1`, [email])
       if (result.rows.length) {
-        const { password: hash_password } = result.rows[0].password
-        const ispasswordValid = bcrypt.compare(
-          `${password}${process.env.BCRYPT_PASSWORD}`,
-          hash_password
-        )
-        if (ispasswordValid) {
+        const datapassword = result.rows[0].password
+        if (datapassword === password) {
           const userresult = await connection.query(
             `SELECT id ,user_name , first_name , last_name , password FROM users WHERE email=$1`,
             [email]
@@ -54,11 +46,6 @@ class UserModel {
       throw new Error(`Error  , ${err.message}an't create user ${email} `)
     }
   }
+}
 
-  // hash password
-}
-const hash_password = (pass: string) => {
-  const salt_R = parseInt(process.env.SLART_ROUNDS as string, 10)
-  return bcrypt.hash(`${pass}${process.env.BCRYPT_PASSWORD}`, salt_R)
-}
 export default UserModel

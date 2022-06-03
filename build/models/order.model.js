@@ -1,23 +1,4 @@
 "use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -58,15 +39,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var bcrypt_1 = __importDefault(require("bcrypt"));
 var database_1 = __importDefault(require("../database"));
-var dotenv = __importStar(require("dotenv"));
-dotenv.config();
-var UserModel = /** @class */ (function () {
-    function UserModel() {
+var OrderModel = /** @class */ (function () {
+    function OrderModel() {
     }
     // create
-    UserModel.prototype.signUp = function (user) {
+    OrderModel.prototype.createOrder = function (user) {
         return __awaiter(this, void 0, void 0, function () {
             var connection, sql, result, err_1;
             return __generator(this, function (_a) {
@@ -82,7 +60,7 @@ var UserModel = /** @class */ (function () {
                                 user.user_name,
                                 user.first_name,
                                 user.last_name,
-                                hash_password(user.password)
+                                user.password
                             ])];
                     case 2:
                         result = _a.sent();
@@ -98,9 +76,9 @@ var UserModel = /** @class */ (function () {
     };
     // get all user
     // Jwt
-    UserModel.prototype.loginUser = function (email, password) {
+    OrderModel.prototype.loginUser = function (email, password) {
         return __awaiter(this, void 0, void 0, function () {
-            var connection, sql, result, hash_password_1, ispasswordValid, userresult, err_2;
+            var connection, result, datapassword, userresult, err_2;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -108,14 +86,12 @@ var UserModel = /** @class */ (function () {
                         return [4 /*yield*/, database_1.default.connect()];
                     case 1:
                         connection = _a.sent();
-                        sql = "SELECT password FROM users WHERE email=$1";
-                        return [4 /*yield*/, connection.query(sql, [email])];
+                        return [4 /*yield*/, connection.query("SELECT password FROM users WHERE email=$1", [email])];
                     case 2:
                         result = _a.sent();
                         if (!result.rows.length) return [3 /*break*/, 4];
-                        hash_password_1 = result.rows[0].password.password;
-                        ispasswordValid = bcrypt_1.default.compare("".concat(password).concat(process.env.BCRYPT_PASSWORD), hash_password_1);
-                        if (!ispasswordValid) return [3 /*break*/, 4];
+                        datapassword = result.rows[0].password;
+                        if (!(datapassword === password)) return [3 /*break*/, 4];
                         return [4 /*yield*/, connection.query("SELECT id ,user_name , first_name , last_name , password FROM users WHERE email=$1", [email])];
                     case 3:
                         userresult = _a.sent();
@@ -131,10 +107,6 @@ var UserModel = /** @class */ (function () {
             });
         });
     };
-    return UserModel;
+    return OrderModel;
 }());
-var hash_password = function (pass) {
-    var salt_R = parseInt(process.env.SLART_ROUNDS, 10);
-    return bcrypt_1.default.hash("".concat(pass).concat(process.env.BCRYPT_PASSWORD), salt_R);
-};
-exports.default = UserModel;
+exports.default = OrderModel;
